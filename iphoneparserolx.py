@@ -103,7 +103,7 @@ def main_loop():
     check_olx()
     time.sleep(90)
 
-
+send_telegram("🔔 Тестовое сообщение! Бот работает и связь с ТГ есть.")
 if __name__ == "__main__":
   # Запускаем сайт в отдельном потоке
   threading.Thread(target=run_flask, daemon=True).start()
