@@ -5,6 +5,7 @@ import requests
 from bs4 import BeautifulSoup
 from flask import Flask
 
+# Заглушка для Render
 app = Flask(__name__)
 
 @app.route("/")
@@ -44,22 +45,22 @@ def send_telegram(text):
     try:
         requests.post(url, data=payload, timeout=10)
     except Exception as e:
-        print(f"Ошибка отправки в ТГ: {e}")
+        print(f"Ошибка ТГ: {e}", flush=True)
 
 def check_olx():
     global is_first_run
-    print("🔍 Начинаю сканирование OLX...")
+    print("🔍 Начинаю сканирование OLX...", flush=True)
     
     for url in OLX_URLS:
         try:
             response = requests.get(url, headers=HEADERS, timeout=15)
             if response.status_code != 200:
-                print(f"⚠️ Ошибка доступа к OLX (Статус: {response.status_code})")
+                print(f"⚠️ Ошибка доступа к OLX (Статус: {response.status_code})", flush=True)
                 continue
 
             soup = BeautifulSoup(response.text, "html.parser")
             cards = soup.find_all("div", {"data-cy": "l-card"})
-            print(f"Найдено карточек по ссылке: {len(cards)}")
+            print(f"Найдено карточек по ссылке: {len(cards)}", flush=True)
 
             for card in cards:
                 link_tag = card.find("a")
@@ -83,7 +84,7 @@ def check_olx():
                 price = price_elem.text.strip() if price_elem else "Договорная"
 
                 if not is_first_run:
-                    print(f"🔥 НАЙДЕНО НОВОЕ ОБЪЯВЛЕНИЕ: {title} - {price}")
+                    print(f"🔥 НАЙДЕНО НОВОЕ ОБЪЯВЛЕНИЕ: {title} - {price}", flush=True)
                     msg = f"🔥 <b>Новый лот на OLX!</b>\n\n📱 <b>{title}</b>\n💰 <b>Цена:</b> {price}\n\n🔗 <a href='{clean_link}'>Открыть объявление</a>"
                     send_telegram(msg)
 
@@ -91,14 +92,14 @@ def check_olx():
 
             time.sleep(2)
         except Exception as e:
-            print(f"Ошибка парсинга: {e}")
+            print(f"Ошибка парсинга: {e}", flush=True)
 
     if is_first_run:
-        print(f"✅ Первый круг завершен. В базе {len(seen_ads)} старых объявлений. Теперь ждем новые!")
+        print(f"✅ Первый круг завершен. В базе {len(seen_ads)} старых объявлений.", flush=True)
         is_first_run = False
 
 def main_loop():
-    send_telegram("🚀 Парсер обновлен, запущен на Render и отслеживает 13 Pro, 14 Pro и 15 Pro!")
+    send_telegram("🚀 Парсер обновлен и продолжает работу!")
     while True:
         check_olx()
         time.sleep(60)
