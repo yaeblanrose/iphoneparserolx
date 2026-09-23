@@ -1,11 +1,10 @@
 import os
 import threading
 import time
-import requests
+import cloudscraper
 from bs4 import BeautifulSoup
 from flask import Flask
 
-# Заглушка для Render
 app = Flask(__name__)
 
 @app.route("/")
@@ -25,11 +24,13 @@ OLX_URLS = [
     "https://www.olx.ua/d/uk/elektronika/telefony-i-aksessuary/smartfony/q-iphone-15-pro/?search%5Bfilter_float_price%3Afrom%5D=5000&search%5Bfilter_float_price%3Ato%5D=20000",
 ]
 
-HEADERS = {
-    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
-    "Accept-Language": "uk-UA,uk;q=0.9,en-US;q=0.8,en;q=0.7",
-}
+scraper = cloudscraper.create_scraper(
+    browser={
+        'browser': 'chrome',
+        'platform': 'windows',
+        'desktop': True
+    }
+)
 
 seen_ads = set()
 is_first_run = True
@@ -43,7 +44,7 @@ def send_telegram(text):
         "disable_web_page_preview": False,
     }
     try:
-        requests.post(url, data=payload, timeout=10)
+        scraper.post(url, data=payload, timeout=10)
     except Exception as e:
         print(f"Ошибка ТГ: {e}", flush=True)
 
@@ -53,7 +54,7 @@ def check_olx():
     
     for url in OLX_URLS:
         try:
-            response = requests.get(url, headers=HEADERS, timeout=15)
+            response = scraper.get(url, timeout=15)
             if response.status_code != 200:
                 print(f"⚠️ Ошибка доступа к OLX (Статус: {response.status_code})", flush=True)
                 continue
@@ -90,7 +91,7 @@ def check_olx():
 
                 seen_ads.add(clean_link)
 
-            time.sleep(2)
+            time.sleep(3)
         except Exception as e:
             print(f"Ошибка парсинга: {e}", flush=True)
 
@@ -99,7 +100,7 @@ def check_olx():
         is_first_run = False
 
 def main_loop():
-    send_telegram("🚀 Парсер обновлен и продолжает работу!")
+    send_telegram("🚀 Парсер обновился на cloudscraper!")
     while True:
         check_olx()
         time.sleep(60)
